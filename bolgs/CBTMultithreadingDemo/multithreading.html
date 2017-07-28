@@ -1,0 +1,374 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Story &mdash; Free Website Template, Free HTML5 Template by freehtml5.co</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Free HTML5 Website Template by freehtml5.co" />
+	<meta name="keywords" content="free website templates, free html5, free template, free bootstrap, free website template, html5, css3, mobile first, responsive" />
+	<meta name="author" content="freehtml5.co" />
+
+	
+
+  	<!-- Facebook and Twitter integration -->
+	<meta property="og:title" content=""/>
+	<meta property="og:image" content=""/>
+	<meta property="og:url" content=""/>
+	<meta property="og:site_name" content=""/>
+	<meta property="og:description" content=""/>
+	<meta name="twitter:title" content="" />
+	<meta name="twitter:image" content="" />
+	<meta name="twitter:url" content="" />
+	<meta name="twitter:card" content="" />
+
+	<link href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,500,700,800" rel="stylesheet">
+	
+	<!-- Animate.css -->
+	<link rel="stylesheet" href="../../css/animate.css">
+	<!-- Icomoon Icon Fonts-->
+	<link rel="stylesheet" href="../../css/icomoon.css">
+	<!-- Bootstrap  -->
+	<link rel="stylesheet" href="../../css/bootstrap.css">
+	
+	<!-- Theme style  -->
+	<link rel="stylesheet" href="../../css/style.css">
+
+	<!-- Modernizr JS -->
+	<script src="../../js/modernizr-2.6.2.min.js"></script>
+	<!-- FOR IE9 below -->
+	<!--[if lt IE 9]>
+	<script src="js/respond.min.js"></script>
+	<![endif]-->
+
+	</head>
+	<body class="single">
+		
+	<div class="fh5co-loader"></div>
+	
+	<div id="page">
+		<div id="fh5co-aside" style="background-image: url(../../images/image_2.jpg)" data-stellar-background-ratio="0.5">
+			<div class="overlay"></div>
+			<nav role="navigation">
+				<ul>
+					<li><a href="../../index.html"><i class="icon-home"></i></a></li>
+				</ul>
+			</nav>
+			<div class="page-title">
+				<img src="../../images/person_1.jpg" alt="Free HTML5 by FreeHTMl5.co">
+				<span>Jul 28, 2017</span>
+				<h2>Talk from a question about multithreading</h2>
+			</div>
+		</div>
+		<div id="fh5co-main-content">
+			<div class="fh5co-post"> 
+				<div class="fh5co-entry padding">
+					
+<div class="article">
+        <h1 class="title">iOS 从一个问题开始说说多线程+死锁（同步函数底层）</h1>
+
+        <!-- 作者区域 -->
+        <div class="author">
+          <a class="avatar" href="/u/fc7384f81c9b"></a>         
+           <div class="info">
+            <span class="tag">作者</span>
+            <span class="name"><a href="/u/fc7384f81c9b">海边的1984_</a></span>
+            <!-- 关注用户按钮 -->
+            <div data-author-follow-button=""></div>
+            <!-- 文章数据信息 -->
+            <div class="meta">
+              <!-- 如果文章更新时间大于发布时间，那么使用 tooltip 显示更新时间 -->
+                <span class="publish-time" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="最后编辑于 2017.07.24 10:38">2017.07.21 11:59*</span>
+              <span class="wordage">字数 1895</span>
+            <span class="views-count">阅读 260</span><span class="comments-count">评论 8</span><span class="likes-count">喜欢 13</span></div>
+          </div>
+          <!-- 如果是当前作者，加入编辑按钮 -->
+        <!-- -->
+        <br/>
+        <!-- 文章内容 -->
+        <div data-note-content="" class="show-content">
+          <h1>引子：</h1>
+<blockquote><p>如果我现在问你GCD里，队列+执行函数的组合怎么产生子线程。<br>你的回答是异步函数+并行队列吗？</p></blockquote>
+<h1>目的</h1>
+<p>写这篇文章不是说我对多线程+加锁理解的有多透彻，我只是喜欢对国内博客里面讲到的一些东西进行一些验证。不知道大家有没有一个感触，百度每个技术点的时候，往往你看到的博客全部是一个模子，全部是抄来抄去，很多作者写东西的时候往往不加验证，这样导致了对于一些知识点的误解。比如说上面那个问题。</p>
+<h1>验证</h1>
+<p>说到GCD，最基本的就是四个队列，两个函数</p>
+<h4>四种队列：</h4>
+<ol>
+<li>串行队列<pre class="hljs cpp"><code class="cpp"><span class="hljs-keyword">dispatch_queue_t</span> q = dispatch_queue_create(<span class="hljs-string">"aaaaa"</span>, DISPATCH_QUEUE_SERIAL);</code></pre>
+</li>
+<li>并行队列<pre class="hljs cpp"><code class="cpp"><span class="hljs-keyword">dispatch_queue_t</span> q = dispatch_queue_create(<span class="hljs-string">"cccccc"</span>, DISPATCH_QUEUE_CONCURRENT);</code></pre>
+</li>
+<li>全局并行队列<pre class="hljs stylus"><code class="stylus"><span class="hljs-function"><span class="hljs-title">dispatch_get_global_queue</span><span class="hljs-params">(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>)</span></span></code></pre>
+</li>
+<li>主队列<pre class="hljs stylus"><code class="stylus"><span class="hljs-function"><span class="hljs-title">dispatch_get_main_queue</span><span class="hljs-params">()</span></span></code></pre>
+但实际上这四个队列可以归结为串行+并行，因为主队列就是一种串行队列（关于这一点我待会回来进行验证），全局并行队列实际上是并行队列。</li>
+</ol>
+<h4>两个函数：</h4>
+<ol>
+<li>同步函数</li>
+</ol>
+<pre class="hljs less"><code class="less">    <span class="hljs-selector-tag">dispatch_sync</span>(q, ^{
+    });</code></pre>
+<ol>
+<li>异步函数</li>
+</ol>
+<pre class="hljs less"><code class="less">    <span class="hljs-selector-tag">dispatch_async</span>(q, ^{
+    });</code></pre>
+<p>下面我会将队列和函数进行两两组合，然后进行调试</p>
+<pre class="hljs objectivec"><code class="objectivec"><span class="hljs-comment">//同步派遣+串行队列</span>
+- (<span class="hljs-keyword">void</span>)func1{
+    <span class="hljs-built_in">dispatch_queue_t</span> q = dispatch_queue_create(<span class="hljs-string">"aaaaa"</span>, DISPATCH_QUEUE_SERIAL);    
+    <span class="hljs-built_in">dispatch_sync</span>(q, ^{
+        <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"1111"</span>);
+    });
+    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"22222"</span>);
+}
+
+<span class="hljs-comment">//异步派遣+串行队列</span>
+- (<span class="hljs-keyword">void</span>)func2{
+    <span class="hljs-built_in">dispatch_queue_t</span> q = dispatch_queue_create(<span class="hljs-string">"bbbbbb"</span>, DISPATCH_QUEUE_SERIAL);
+    <span class="hljs-built_in">dispatch_async</span>(q, ^{
+        <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"1111"</span>);
+    });
+    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"22222"</span>);
+}
+
+<span class="hljs-comment">//同步派遣+并行队列</span>
+- (<span class="hljs-keyword">void</span>)func3{
+    <span class="hljs-built_in">dispatch_queue_t</span> q = dispatch_queue_create(<span class="hljs-string">"cccccc"</span>, DISPATCH_QUEUE_CONCURRENT);
+    <span class="hljs-built_in">dispatch_sync</span>(q, ^{
+        <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"1111"</span>);
+    });
+    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"22222"</span>);
+}
+
+<span class="hljs-comment">//异步派遣+并行队列</span>
+- (<span class="hljs-keyword">void</span>)func4{
+    <span class="hljs-built_in">dispatch_queue_t</span> q = dispatch_queue_create(<span class="hljs-string">"ddddddd"</span>, DISPATCH_QUEUE_CONCURRENT);
+    <span class="hljs-built_in">dispatch_async</span>(q, ^{
+        <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"1111"</span>);
+    });
+    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"22222"</span>);
+}</code></pre>
+<h1>结论</h1>
+<h4>1. 主队列是串行队列</h4>
+<p>现在程序运行在主线程中，这个主线程在主队列中<br></p><div class="image-package">
+<img src="images/multithreading1.jpeg" style="cursor: zoom-in;"><br><div class="image-caption"></div>
+</div>
+<br/>
+<pre class="hljs stylus"><code class="stylus">Queue:com<span class="hljs-selector-class">.apple</span><span class="hljs-selector-class">.main-thred</span>(serial)</code></pre>
+<p><code>com.apple.main-thred</code> 实际上是队列的别名<br><code>serial</code> 是串行队列的意思</p>
+<h4>2.  同步派遣+串行队列，不产生子线程</h4>
+<p>这个截图侧面的佐证了1的结论，而且我们观察到这时候，程序还是运行在Thread1中。这里要说明的是不一定Thread1就是主线程，我们需要观察调用栈的方法，如截图所示<code>UIApplication,UIViewController，UIWindow</code>的各种初始化方法都在这个线程里面执行，所以我们判断出这里是主线程，其他的所有线程都是子线程。程序还在主线程中，所以这里不产生子线程。</p>
+<div class="image-package">
+<img src="images/multithreading2.jpeg"><br><div class="image-caption"></div>
+<br/>
+</div>
+<h4>3.  异步派遣+串行队列，产生子线程</h4>
+<p>这个结论就是文章最初的提问的关键所在，很多人认为这里不会产生子线程，但是实际上是产生了子线程的。<br>如下面所示，这时候程序员已经来到了Thread3。</p>
+<div class="image-package">
+<img src="images/multithreading3.jpeg"><br><div class="image-caption"></div>
+</div>
+<br/>
+<h4>4.  同步派遣+并行队列，没有产生子线程</h4>
+<div class="image-package">
+<img src="images/multithreading4.jpeg"><br><div class="image-caption"></div>
+</div>
+<br/>
+<h4>5.  异步派遣+并行队列，产生子线程</h4>
+<div class="image-package">
+<img src="images/multithreading5.jpeg"><br><div class="image-caption"></div>
+</div>
+<br/>
+<h4>6. 总结一下</h4>
+<p>单独谈论队列和同步异步函数都不合适，只有组合的时候，才有讨论的意义。<br>通过上面的例子，是否产生子线程很大程度取决于执行函数。<br>异步派遣能够将队列调度到别的子线程上面去<br>同步派遣能够将队列调度到当前线程（注意是当前线程，不一定是主线程）</p>
+<p>所以上面的问题的答案是：异步函数+并行队列／异步函数+串行队列 都会产生子线程。</p>
+<h1>另外一个问题：死锁</h1>
+<p>问下面函数的执行结果<br></p><div class="image-package">
+<img src="images/multithreading6.jpeg"><br><div class="image-caption"></div>
+</div>
+<br/>
+<div class="image-package">
+<img src="images/multithreading7.jpeg"><br><div class="image-caption"></div>
+</div>
+<br/>
+<p>这里如果我将22222上面的更改为<code>dispatch_sync(q, ^{</code> ，请问执行结果是什么？</p>
+<div class="image-package">
+<img src="images/multithreading8.jpeg"><br><div class="image-caption"></div>
+</div>
+<br/>
+<p>答案是执行到这里崩溃了，我们来分析一下，为什么这里会崩溃？很多博客上面都有说会崩溃<br>但是理由很牵强。大概是下面截图这个意思。</p>
+<div class="image-package">
+<img src="images/multithreading9.jpeg"><br><div class="image-caption"></div>
+</div>
+<br/>
+<p>老实说，这个说法很牵强。看这段我自己都不能说服我自己，下面是唯一能说服我的帖子，是从源码的角度来说的。<br><a href="http://www.jianshu.com/p/3684f40c9172" target="_blank">一个曲高和寡语言水平很捉急的大神给出的源码</a><br>但是他的分析太难看懂了，主要是因为语文水平很捉急。这里我帮大家总结一下。</p>
+<p>实际上GCD里面关于实现同步队列使用到的是信号量，模拟出来大概是这样子的</p>
+<pre class="hljs objectivec"><code class="objectivec"><span class="hljs-keyword">@synchronized</span> (<span class="hljs-keyword">self</span>) {
+                <span class="hljs-keyword">if</span> (<span class="hljs-keyword">self</span>.array.count &lt;= <span class="hljs-number">0</span>) {
+                    <span class="hljs-keyword">continue</span>;
+                }
+
+                <span class="hljs-built_in">NSNumber</span> *number = [<span class="hljs-keyword">self</span>.array lastObject];
+                <span class="hljs-keyword">if</span> ([number boolValue]) {
+
+                    <span class="hljs-comment">//同步事件.  同步派遣的事件-&gt;synsc block里面需要被执行的</span>
+                    <span class="hljs-comment">//一个同步事件可以分为两部分.  第一wait queue,  第二, 派发事件.</span>
+                    <span class="hljs-comment">//此处为了方便,  两行代码位置是反的.  但是由于async 派遣, 本身就拼到了队列末尾.  所以</span>
+                    <span class="hljs-comment">//从实际执行角度,   顺序是没有问题的.   完整模拟了.   dispatch源码中对事件的执行模式和 同步派遣到本身队列的死锁问题.</span>
+                    <span class="hljs-built_in">dispatch_async</span>(queue, ^{
+                        dispatch_semaphore_signal(semaphore);
+                    });
+
+                    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+
+                    [<span class="hljs-keyword">self</span>.array removeLastObject];
+                    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"\n"</span>);
+                    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"消费了  同步!!!!!!事件"</span>);
+                    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"\n"</span>);
+                    syncEvent = <span class="hljs-literal">NO</span>;
+
+                }<span class="hljs-keyword">else</span>{
+                    <span class="hljs-comment">//普通消费.</span>
+                    <span class="hljs-built_in">dispatch_async</span>(dispatch_get_global_queue(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>), ^{
+                        <span class="hljs-keyword">@synchronized</span> (<span class="hljs-keyword">self</span>) {
+                            [<span class="hljs-keyword">self</span>.array removeLastObject];
+                            <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@"消费了一个异步事件."</span>);
+                        }
+                    });
+                }
+            }</code></pre>
+<p>想要看懂上面这段代码，你需要反复理解下面几句话，我当时想了一下午才想通。</p>
+<ol>
+<li>串行队列里面只可能有一个线程，并行队列里面可能有多个。</li>
+<li>队列里面可能没有线程，线程总是跑来跑去的。</li>
+<li>不管是同步函数或者是异步函数，都会将block里面的内容派遣到对应的队列的最下面。</li>
+<li>同步函数里面维护了一套信号量，信号量的single操作被套在异步函数里面<pre class="hljs lisp"><code class="lisp">dispatch_async(<span class="hljs-name">queue</span>, ^{
+     dispatch_semaphore_signal(<span class="hljs-name">semaphore</span>)<span class="hljs-comment">;</span>
+})<span class="hljs-comment">;</span></code></pre>
+</li>
+<li>同步函数的的其他操作在同步函数所处的外面的队列里面去执行，只有<pre class="hljs lisp"><code class="lisp">     dispatch_semaphore_signal(<span class="hljs-name">semaphore</span>)<span class="hljs-comment">;</span></code></pre>
+在同步函数锁包裹的队列里面去执行。</li>
+</ol>
+<p>综上所述，这行代码将信号量的++事件放到了queue队列的最后。如果同步函数外面没有对queue做派遣动作，不会死锁。</p>
+<p>我们将这些理论放到实际例子里面去解释</p>
+<pre class="hljs mipsasm"><code class="mipsasm">- (void)viewDidLoad {
+    [super viewDidLoad]<span class="hljs-comment">;</span>
+    <span class="hljs-keyword">dispatch_sync(dispatch_get_main_queue(), </span>^{
+        NSLog(@<span class="hljs-string">"1111"</span>)<span class="hljs-comment">;</span>
+    })<span class="hljs-comment">;</span>
+
+    NSLog(@<span class="hljs-string">"222"</span>)<span class="hljs-comment">;</span>
+}</code></pre>
+<p>外面是主队列，主队列里面是主线程，同步函数将<code>NSLog(@"1111");</code> 压倒主队列的底部了。里外都是主队列，事件顺序执行。<br>同步函数底层按照顺序异步函数将<code>dispatch_semaphore_signal(semaphore);</code><br>压在queue（主队列）的最下面</p>
+<pre class="hljs lisp"><code class="lisp"> dispatch_async(<span class="hljs-name">queue</span>, ^{
+        dispatch_semaphore_signal(<span class="hljs-name">semaphore</span>)<span class="hljs-comment">;</span>
+ })<span class="hljs-comment">;</span></code></pre>
+<p>然后执行</p>
+<pre class="hljs lisp"><code class="lisp">dispatch_semaphore_wait(<span class="hljs-name">semaphore</span>, DISPATCH_TIME_FOREVER)<span class="hljs-comment">;</span></code></pre>
+<p>信号量--为-1，阻塞当前线程</p>
+<p>，这样程序员永远都执行不到<code>dispatch_semaphore_signal(semaphore)</code></p>
+<h1>思考</h1>
+<p>这个例子不知道大家看懂了没有，是不是感觉这样分析的话，只要使用同步函数都会被死锁。<br>其实同步函数的底层下面这个函数能够执行到线程就不会被锁住</p>
+<pre class="hljs lisp"><code class="lisp"> dispatch_async(<span class="hljs-name">queue</span>, ^{
+        dispatch_semaphore_signal(<span class="hljs-name">semaphore</span>)<span class="hljs-comment">;</span>
+ })<span class="hljs-comment">;</span></code></pre>
+<p>如何能执行<code>dispatch_semaphore_signal(semaphore);</code><br>信号量的++操作被压在queue的最下面了，只要同步函数的执行的queue和外面的queue不一致，这里就会被执行了。</p>
+<p>看这个例子，我们将同步函数派遣的主队列换成一个新的串行队列</p>
+<pre class="hljs mipsasm"><code class="mipsasm">- (void)viewDidLoad {
+    [super viewDidLoad]<span class="hljs-comment">;</span>
+    <span class="hljs-keyword">dispatch_sync(dispatch_queue_create("1111", </span><span class="hljs-keyword">DISPATCH_QUEUE_SERIAL), </span>^{
+        NSLog(@<span class="hljs-string">"1111"</span>)<span class="hljs-comment">;</span>
+    })<span class="hljs-comment">;</span>
+
+    NSLog(@<span class="hljs-string">"222"</span>)<span class="hljs-comment">;</span>
+}</code></pre>
+<p>这样同步函数的底层在主队列里面执行下面信号量--</p>
+<pre class="hljs lisp"><code class="lisp">dispatch_semaphore_wait(<span class="hljs-name">semaphore</span>, DISPATCH_TIME_FOREVER)<span class="hljs-comment">;</span></code></pre>
+<p>主队列里面执行异步函数+串行队列，将信号量++压在串行队列的底部，串行队列唯一事件为信号量++函数，于是执行解锁。</p>
+<pre class="hljs lisp"><code class="lisp"> dispatch_async(<span class="hljs-name">queue</span>, ^{
+        dispatch_semaphore_signal(<span class="hljs-name">semaphore</span>)<span class="hljs-comment">;</span>
+ })<span class="hljs-comment">;</span></code></pre>
+<p>这样就不会造成死锁了。</p>
+<h1>再来一个例子</h1>
+<pre class="hljs mipsasm"><code class="mipsasm">    <span class="hljs-keyword">dispatch_queue_t </span>q = <span class="hljs-keyword">dispatch_queue_create("1111111", </span><span class="hljs-keyword">DISPATCH_QUEUE_SERIAL);
+</span>
+    <span class="hljs-keyword">dispatch_sync(q, </span>^{
+
+        NSLog(@<span class="hljs-string">"11111"</span>)<span class="hljs-comment">;</span>
+        <span class="hljs-keyword">dispatch_sync(q, </span>^{
+            NSLog(@<span class="hljs-string">"22222"</span>)<span class="hljs-comment">;</span>
+        })<span class="hljs-comment">;</span>
+        NSLog(@<span class="hljs-string">"33333"</span>)<span class="hljs-comment">;</span>
+    })<span class="hljs-comment">;</span>
+
+    NSLog(@<span class="hljs-string">"44444"</span>)<span class="hljs-comment">;</span>
+    NSLog(@<span class="hljs-string">"5555"</span>)<span class="hljs-comment">;</span></code></pre>
+<p>第一层同步函数处在主队列里面，<br>同步函数的底层主队列里面执行</p>
+<pre class="hljs lisp"><code class="lisp">dispatch_semaphore_wait(<span class="hljs-name">semaphore</span>, DISPATCH_TIME_FOREVER)<span class="hljs-comment">;</span></code></pre>
+<p>在新的串行队列里面执行</p>
+<pre class="hljs lisp"><code class="lisp"> dispatch_async(<span class="hljs-name">queue</span>, ^{
+        dispatch_semaphore_signal(<span class="hljs-name">semaphore</span>)<span class="hljs-comment">;</span>
+ })<span class="hljs-comment">;</span></code></pre>
+<p>这两步操作分开在不同的队列里面，都能执行，所以不会死锁</p>
+<p>第二层同步函数处在q队列里面<br>同步函数的底层q串行队列里面执行，锁住了q队列，q队列无法执行其他事件</p>
+<pre class="hljs lisp"><code class="lisp">dispatch_semaphore_wait(<span class="hljs-name">semaphore</span>, DISPATCH_TIME_FOREVER)<span class="hljs-comment">;</span></code></pre>
+<p>在q串行队列里面执行，被压入队列事件中，但是因为信号量锁住线程gg</p>
+<pre class="hljs lisp"><code class="lisp"> dispatch_async(<span class="hljs-name">queue</span>, ^{
+        dispatch_semaphore_signal(<span class="hljs-name">semaphore</span>)<span class="hljs-comment">;</span>
+ })<span class="hljs-comment">;</span></code></pre>
+<p>真的很绕很绕，但是是从一个源码的角度来看的。当然你们想看源码，会更蒙<br></p><div class="image-package">
+<img src="images/multithreading10.png" style="cursor: zoom-in;"><br><div class="image-caption"></div>
+</div>
+<br/>
+<p><a href="http://www.jianshu.com/p/3684f40c9172" target="_blank">一个曲高和寡的哥们写的源码分析</a></p>
+<p><a href="https://github.com/knightSaber/CBTMultithreadingDemo" target="_blank">demo地址</a></p>
+
+        </div>
+        <!--  -->
+
+        <div class="show-foot">
+          <a class="notebook" href="/nb/3571392">
+            <i class="iconfont ic-search-notebook"></i> <span>日记本</span>
+</a>          <div class="copyright" data-toggle="tooltip" data-html="true" data-original-title="转载请联系作者获得授权，并标注“简书作者”。">
+            © 著作权归作者所有
+          </div>
+          
+        </div>
+    </div>
+
+				</div>
+				
+				
+
+			</div>
+		</div>
+	</div>
+
+	<footer>
+		<div>
+					&copy; 2017 海边的1984. Designed by <a href="" target="_blank">海边的1984</a> 
+					</div>
+				</footer>
+
+	<div class="gototop js-top">
+		<a href="#" class="js-gotop"><i class="icon-arrow-up"></i></a>
+	</div>
+	
+	<!-- jQuery -->
+	<script src="../../js/jquery.min.js"></script>
+	<!-- jQuery Easing -->
+	<script src="../../js/jquery.easing.1.3.js"></script>
+	<!-- Bootstrap -->
+	<script src="../../js/bootstrap.min.js"></script>
+	<!-- Waypoints -->
+	<script src="../../js/jquery.waypoints.min.js"></script>
+	<!-- Stellar Parallax -->
+	<script src="../../js/jquery.stellar.min.js"></script>
+	<!-- Main -->
+	<script src="../../js/main.js"></script>
+
+	</body>
+</html>
+
