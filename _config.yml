@@ -78,6 +78,6 @@ theme: yilia
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: git@github.com:knightSaber/cbtsite.git
+  repository: git@github.com:knightSaber/cbtsite.git
   branch: master
 
