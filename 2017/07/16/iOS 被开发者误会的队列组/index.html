@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="信号量,队列组," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="#引子：  了解过GCD的同学可能对队列组不会陌生，但是我认识的程序员里面有1/3的认为这个队列组能够解决线程同步问题。还有1/3的程序员不知道不知道。dispatch_group_enter,dispatch_group_leave函数是什么。">
+<meta name="keywords" content="信号量,队列组">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS 被开发者误会的队列组">
+<meta property="og:url" content="http://www.botaochen.xyz/2017/07/16/iOS 被开发者误会的队列组/index.html">
+<meta property="og:site_name" content="海边的1984">
+<meta property="og:description" content="#引子：  了解过GCD的同学可能对队列组不会陌生，但是我认识的程序员里面有1/3的认为这个队列组能够解决线程同步问题。还有1/3的程序员不知道不知道。dispatch_group_enter,dispatch_group_leave函数是什么。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-7536af929eabb1e3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-5e94d792f6164412.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-f5d66a54833d23f1.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2017-08-02T08:10:43.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS 被开发者误会的队列组">
+<meta name="twitter:description" content="#引子：  了解过GCD的同学可能对队列组不会陌生，但是我认识的程序员里面有1/3的认为这个队列组能够解决线程同步问题。还有1/3的程序员不知道不知道。dispatch_group_enter,dispatch_group_leave函数是什么。">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/1743443-7536af929eabb1e3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.botaochen.xyz/2017/07/16/iOS 被开发者误会的队列组/"/>
+
+
+
+
+
+  <title>iOS 被开发者误会的队列组 | 海边的1984</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">海边的1984</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.botaochen.xyz/2017/07/16/iOS 被开发者误会的队列组/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="陈波涛">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="海边的1984">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS 被开发者误会的队列组</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-16T00:00:00+08:00">
+                2017-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/多线程/" itemprop="url" rel="index">
+                    <span itemprop="name">多线程</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>#引子：</p>
+<blockquote>
+<p>了解过GCD的同学可能对队列组不会陌生，但是我认识的程序员里面有1/3的认为这个队列组能够解决线程同步问题。还有1/3的程序员不知道不知道。<br>dispatch_group_enter,dispatch_group_leave函数是什么。</p>
+</blockquote>
+<a id="more"></a>
+<p>这就是我想要写这篇文章的目的。</p>
+<p>#文章要点：</p>
+<ol>
+<li>队列组如何实现多个子线程的同步。</li>
+<li>队列组的几种写法。</li>
+<li>信号量的几种玩法。</li>
+</ol>
+<p>#阅读下面代码，是否看这很熟悉，我相信不少人是从这段代码开始学习GCD的用法的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">// 创建一个队列组!</div><div class="line">    dispatch_group_t group = dispatch_group_create();</div><div class="line">    __block UIImage *image1 ,*image2;</div><div class="line">    // 下载第一张图片</div><div class="line">    dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^&#123;</div><div class="line">        image1 = [self downloadImageWithUrlString:@&quot;http://g.hiphotos.baidu.com/image/pic/item/95eef01f3a292df54e0e7e08be315c6035a873da.jpg&quot;];</div><div class="line">    &#125;);</div><div class="line">    </div><div class="line">    // 下载第二张图片</div><div class="line">    dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^&#123;</div><div class="line">        </div><div class="line">        image2 = [self downloadImageWithUrlString:@&quot;http://e.hiphotos.baidu.com/image/pic/item/cc11728b4710b912d4bb69ffc1fdfc03924522bc.jpg&quot;];</div><div class="line">        </div><div class="line">    &#125;);</div><div class="line">    </div><div class="line">    // 合并图片并且显示</div><div class="line">    dispatch_group_notify(group, dispatch_get_main_queue(), ^&#123;</div><div class="line">        </div><div class="line">       // NSLog(@&quot;显示图片! %@&quot;,[NSThread currentThread]);</div><div class="line">        </div><div class="line">        // 合并图片</div><div class="line">        UIImage *image = [self bingImageWithImage1:image1 Image2:image2];</div><div class="line">        </div><div class="line">        // 显示合并之后的图片!</div><div class="line">        self.imageView.image = image;</div><div class="line">    &#125;);</div></pre></td></tr></table></figure>
+<p>上面的代码很有误导性，下载一张图片和第二张图片的方法都是在子线程里面去执行的，然后最后合并的时候能够拿到合并在一起的图片。当看到最终演示的效果的时候，大家心满意足的觉得自己已经学会了队列组。</p>
+<p>但是我们忽略了一个问题就是下面这个封装的代码是同步的还是异步的，如果这段代码是同步的，那么队列组就毫无意义<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[self downloadImageWithUrlString:@&quot;http://e.hiphotos.baidu.com/image/pic/item/cc11728b4710b912d4bb69ffc1fdfc03924522bc.jpg&quot;];</div></pre></td></tr></table></figure></p>
+<p>我们看到下面的方法，在我断点调试的时候发现下面代码全部都是在主线程里面执行的<br><img src="http://upload-images.jianshu.io/upload_images/1743443-7536af929eabb1e3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="C9EB368D-AFDE-4FF7-AD4C-4ACBABA5DE77.png"><br><img src="http://upload-images.jianshu.io/upload_images/1743443-5e94d792f6164412.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="8B968DE8-3F57-4400-8CF9-EF8C53EFE2C2.png"></p>
+<p>于是我将队列组的代码全部干掉。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">- (void)touchesBegan:(NSSet&lt;UITouch *&gt; *)touches withEvent:(UIEvent *)event</div><div class="line">&#123;</div><div class="line"></div><div class="line">    __block UIImage *image1 ,*image2;</div><div class="line">    </div><div class="line">    // 下载第一张图片</div><div class="line">    image1 = [self downloadImageWithUrlString:@&quot;http://g.hiphotos.baidu.com/image/pic/item/95eef01f3a292df54e0e7e08be315c6035a873da.jpg&quot;];</div><div class="line">    </div><div class="line">    </div><div class="line">    // 下载第二张图片</div><div class="line">    </div><div class="line">    image2 = [self downloadImageWithUrlString:@&quot;http://e.hiphotos.baidu.com/image/pic/item/cc11728b4710b912d4bb69ffc1fdfc03924522bc.jpg&quot;];</div><div class="line">    </div><div class="line">    </div><div class="line">    // 合并图片并且显示</div><div class="line">    </div><div class="line">    // 合并图片</div><div class="line">    UIImage *image = [self bingImageWithImage1:image1 Image2:image2];</div><div class="line">    </div><div class="line">    // 显示合并之后的图片!</div><div class="line">    self.imageView.image = image;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1743443-f5d66a54833d23f1.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="WechatIMG98.jpeg"></p>
+<p>效果一摸一样，两张图片拼接出来了一张图片，所以说上面这种队列一点用都没有。</p>
+<p>#实际开发<br>实际开发中遇到了上传多张图片（上传操作全部是异步操作）之后进行一个回调操作的时候，假如你按照上面的写法就会大骂一句坑爹，然后会使用很low的方式，比如说在回调里面i++，然后在最终方法里面统计这个i++是否合图片数组的count一致，然后执行最终方法。</p>
+<p>#两种多线程的同步解法（<a href="https://github.com/knightSaber/CBTQueueGroupDemo" target="_blank" rel="external">附上demo</a>）<figure class="highlight plain"><figcaption><span>or ```信号量```</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">1.  ``` enter，leave</div></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line">// 创建一个队列组!</div><div class="line">dispatch_group_t group = dispatch_group_create();</div><div class="line"></div><div class="line">__block UIImage *image1 ,*image2;</div><div class="line"></div><div class="line">// 下载第一张图片</div><div class="line">dispatch_group_enter(group);//在需要进入队列组的子线程外面进入队列组</div><div class="line">[self downloadImageWithUrlString:@&quot;http://g.hiphotos.baidu.com/image/pic/item/95eef01f3a292df54e0e7e08be315c6035a873da.jpg&quot; SuccessBlock:^(UIImage *image) &#123;</div><div class="line">    </div><div class="line">    image1 = image;</div><div class="line">    dispatch_group_leave(group);//在成功回调的时候离开队列组</div><div class="line">    </div><div class="line">&#125; failBlock:^(id error) &#123;</div><div class="line">    </div><div class="line">&#125;];</div><div class="line"></div><div class="line"></div><div class="line">// 下载第二张图片</div><div class="line">dispatch_group_enter(group);</div><div class="line">[self downloadImageWithUrlString:@&quot;http://e.hiphotos.baidu.com/image/pic/item/cc11728b4710b912d4bb69ffc1fdfc03924522bc.jpg&quot; SuccessBlock:^(UIImage *image) &#123;</div><div class="line">    </div><div class="line">    image2 = image;</div><div class="line">    dispatch_group_leave(group);</div><div class="line">    </div><div class="line">&#125; failBlock:^(id error) &#123;</div><div class="line">    </div><div class="line">&#125;];</div><div class="line"></div><div class="line">// 合并图片并且显示</div><div class="line">dispatch_group_notify(group, dispatch_get_main_queue(), ^&#123;</div><div class="line">    </div><div class="line">    // NSLog(@&quot;显示图片! %@&quot;,[NSThread currentThread]);</div><div class="line">    </div><div class="line">    // 合并图片</div><div class="line">    UIImage *image = [self bingImageWithImage1:image1 Image2:image2];</div><div class="line">    </div><div class="line">    // 显示合并之后的图片!</div><div class="line">    self.imageView.image = image;</div><div class="line">    </div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<ol>
+<li>信号量</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div></pre></td><td class="code"><pre><div class="line">// 创建一个队列组!</div><div class="line">dispatch_group_t group = dispatch_group_create();</div><div class="line">dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);</div><div class="line"></div><div class="line">__block UIImage *image1 ,*image2;</div><div class="line"></div><div class="line">/*</div><div class="line"> 需要将dispatch_semaphore_wait放在后面的原因是，程序先执行了下载图片代码,进行wait--，然后下载完成的回调signal++，这时候程序可以继续</div><div class="line"> */</div><div class="line"></div><div class="line">dispatch_group_async(group, dispatch_queue_create(&quot;1111&quot;, DISPATCH_QUEUE_CONCURRENT), ^&#123;</div><div class="line">   </div><div class="line">    // 下载第一张图片</div><div class="line">    [self downloadImageWithUrlString:@&quot;http://g.hiphotos.baidu.com/image/pic/item/95eef01f3a292df54e0e7e08be315c6035a873da.jpg&quot; SuccessBlock:^(UIImage *image) &#123;</div><div class="line">        </div><div class="line">        image1 = image;</div><div class="line">        </div><div class="line">        dispatch_semaphore_signal(semaphore);//信号量++，继续</div><div class="line">        </div><div class="line">    &#125; failBlock:^(id error) &#123;</div><div class="line">        </div><div class="line">    &#125;];</div><div class="line">    </div><div class="line">    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);//信号量--，阻塞</div><div class="line">    </div><div class="line">&#125;);</div><div class="line"></div><div class="line"></div><div class="line">dispatch_group_async(group, dispatch_queue_create(&quot;22222&quot;, DISPATCH_QUEUE_CONCURRENT), ^&#123;</div><div class="line">    </div><div class="line">    // 下载第二张图片</div><div class="line">    [self downloadImageWithUrlString:@&quot;http://e.hiphotos.baidu.com/image/pic/item/cc11728b4710b912d4bb69ffc1fdfc03924522bc.jpg&quot; SuccessBlock:^(UIImage *image) &#123;</div><div class="line">        </div><div class="line">        image2 = image;</div><div class="line">        </div><div class="line">        dispatch_semaphore_signal(semaphore);//信号量++，继续</div><div class="line">        </div><div class="line">    &#125; failBlock:^(id error) &#123;</div><div class="line">        </div><div class="line">    &#125;];</div><div class="line">    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);//信号量--，阻塞</div><div class="line">    </div><div class="line">&#125;);</div><div class="line"></div><div class="line"></div><div class="line">// 合并图片并且显示</div><div class="line">dispatch_group_notify(group, dispatch_get_main_queue(), ^&#123;</div><div class="line">    </div><div class="line">    // 合并图片</div><div class="line">    UIImage *image = [self bingImageWithImage1:image1 Image2:image2];</div><div class="line">    </div><div class="line">    NSLog(@&quot;%@&quot;,[NSThread currentThread]);</div><div class="line">    </div><div class="line">    // 显示合并之后的图片!</div><div class="line">    self.imageView.image = image;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>#信号量<br>信号量是解决多线程同步的的API,我最先接触的时候，是从锁的角度去看待信号量的。下面是各种锁的博客，第二个就是信号量的讲解，看下面这个就好了。这里就不班门弄斧了。<br><a href="http://www.cocoachina.com/ios/20160707/16957.html" target="_blank" rel="external">信号量的详解</a></p>
+<p>#信号量的其他玩法</p>
+<p>队列组讲到这里，信号量的加锁将在我的另外一个简书文章里面进行讲解<br><a href="http://www.jianshu.com/p/ea1985006e1a" target="_blank" rel="external">信号量的加锁</a></p>
+<p>#一点感悟</p>
+<p>现在很多程序员圈子里面真的是有趣的灵魂太少，大家似乎看博客就是看博客，而不会自己去写demo去验证一下博主的对错。<br>“知行合一”，是几百年前王守仁提出来的思想，我觉得用在开发中不错。希望大家以后能够带着挑剔的眼光以及怀疑的心态去学知识。</p>
+<p><a href="https://github.com/knightSaber/CBTQueueGroupDemo" target="_blank" rel="external">附上demo</a></p>
+<p>@godl</p>
+<p>我发现我的写法有点问题，现在已经改了写法，这样就不会阻塞主线程了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/信号量/" rel="tag"># 信号量</a>
+          
+            <a href="/tags/队列组/" rel="tag"># 队列组</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/01/iOS 如何利用脚本编写icon角标区分APP版本+环境/" rel="next" title="iOS 如何利用脚本编写icon角标区分APP版本+环境">
+                <i class="fa fa-chevron-left"></i> iOS 如何利用脚本编写icon角标区分APP版本+环境
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/22/iOS-从一个问题开始说说多线程-死锁（同步函数）/" rel="prev" title="iOS 从一个问题开始说说多线程+死锁（同步函数）">
+                iOS 从一个问题开始说说多线程+死锁（同步函数） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="陈波涛" />
+          <p class="site-author-name" itemprop="name">陈波涛</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人小站</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/your-user-name" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="hhttps://github.com/knightSaber" target="_blank" title="简书">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                    
+                      简书
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈波涛</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

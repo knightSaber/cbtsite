@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="分环境," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="#引子上篇文章解决了如何快速科学的区分APP环境。紧随着又出现这个需求。当APP存在多个环境的时候，如何快速的区分不同的版本+环境，如果能直观的通过角标来完成这样一个区分就太棒了。">
+<meta name="keywords" content="分环境">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS 如何利用脚本编写icon角标区分APP版本+环境">
+<meta property="og:url" content="http://www.botaochen.xyz/2017/07/01/iOS 如何利用脚本编写icon角标区分APP版本+环境/index.html">
+<meta property="og:site_name" content="海边的1984">
+<meta property="og:description" content="#引子上篇文章解决了如何快速科学的区分APP环境。紧随着又出现这个需求。当APP存在多个环境的时候，如何快速的区分不同的版本+环境，如果能直观的通过角标来完成这样一个区分就太棒了。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-7999547e25d19775.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-b666563ff1e66d62.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-e15b140fe7d8d179.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-df717f9ec7823be1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-5c44ba41b0449a2b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-d6d676f41f0724eb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1743443-2bad97b8ac0f430d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2017-08-02T08:12:30.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS 如何利用脚本编写icon角标区分APP版本+环境">
+<meta name="twitter:description" content="#引子上篇文章解决了如何快速科学的区分APP环境。紧随着又出现这个需求。当APP存在多个环境的时候，如何快速的区分不同的版本+环境，如果能直观的通过角标来完成这样一个区分就太棒了。">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/1743443-7999547e25d19775.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.botaochen.xyz/2017/07/01/iOS 如何利用脚本编写icon角标区分APP版本+环境/"/>
+
+
+
+
+
+  <title>iOS 如何利用脚本编写icon角标区分APP版本+环境 | 海边的1984</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">海边的1984</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.botaochen.xyz/2017/07/01/iOS 如何利用脚本编写icon角标区分APP版本+环境/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="陈波涛">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="海边的1984">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS 如何利用脚本编写icon角标区分APP版本+环境</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-01T00:00:00+08:00">
+                2017-07-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/项目实战/" itemprop="url" rel="index">
+                    <span itemprop="name">项目实战</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>#引子<br>上篇文章解决了如何快速科学的区分APP环境。紧随着又出现这个需求。<br>当APP存在多个环境的时候，如何快速的区分不同的版本+环境，如果能直观的通过角标来完成这样一个区分就太棒了。<br><a id="more"></a></p>
+<p>#本文目的</p>
+<ol>
+<li>解决如何通过角标区分环境 。</li>
+<li>打包build++。</li>
+</ol>
+<p>#展示效果<br>这是在fir上面打包出来的效果。<br><img src="http://upload-images.jianshu.io/upload_images/1743443-7999547e25d19775.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="1507F8BB-F39F-4DB0-B081-0CB3DE7CDD75.png"></p>
+<p>#如何实现</p>
+<p>#####首先花几分钟安装Homebrew + Ghostscript插件，很简单<br><a href="http://www.jianshu.com/p/ed29cd01acf6" target="_blank" rel="external">安装教程</a><br> 需要说的是上面这个链接简书的作者不是原创，最早是一个外国的开发者开发的，中国有人进行了翻译，然后这篇博客也被抄来抄去，但是并不影响我们使用。</p>
+<p>#####1. 安装好了上面的两个插件之后，在项目包下面添加角标图片，名字别修改了，因为脚本里面找的路径关联图片名称</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1743443-b666563ff1e66d62.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="1C423191-E05A-40EF-B61E-31EF312DBB6C.png"></p>
+<p>#####2.  建立脚本。<br>注意这里脚本的顺序不要乱，就加在最后面，因为这里的脚本会按照先后顺序进行编译。如果把角标脚本放到台前面，会出问题。<br><img src="http://upload-images.jianshu.io/upload_images/1743443-e15b140fe7d8d179.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="屏幕快照 2017-07-19 下午2.29.35.png"></p>
+<p>#####3. 脚本编写。<br>(下面会给出demo，这个脚本根据不同的判断条件用来绘制角标。挺复杂的，但是并不需要弄懂才能使用，使用的时候更改环境，和对应的图片就能得到你想要的效果)<br>脚本最终的位置<br><img src="http://upload-images.jianshu.io/upload_images/1743443-df717f9ec7823be1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="A0C21A2D-5F3F-4278-8784-36985850B05A.png"></p>
+<p>脚本文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line">IFS=$&apos;\n&apos;</div><div class="line">//获取build,需要画到图标上面去</div><div class="line">buildNumber=$(/usr/libexec/PlistBuddy -c &quot;Print CFBundleVersion&quot; &quot;$&#123;INFOPLIST_FILE&#125;&quot;) </div><div class="line">//获取版本号，需要画到图标上面去</div><div class="line">versionNumber=$(/usr/libexec/PlistBuddy -c &quot;Print CFBundleShortVersionString&quot; &quot;$&#123;INFOPLIST_FILE&#125;&quot;)</div><div class="line">//获取bundleID, 需要进行环境的判断</div><div class="line">bundleIdentifier=$&#123;PRODUCT_BUNDLE_IDENTIFIER&#125;</div><div class="line"></div><div class="line">PATH=$&#123;PATH&#125;:/usr/local/bin</div><div class="line"></div><div class="line">echo &quot;this is PR Environment&quot; //打印现在这个环境是PR环境</div><div class="line"></div><div class="line">function generateIcon () &#123;</div><div class="line">    </div><div class="line">    BASE_IMAGE_NAME=$1</div><div class="line">    </div><div class="line">    TARGET_PATH=&quot;$&#123;BUILT_PRODUCTS_DIR&#125;/$&#123;UNLOCALIZED_RESOURCES_FOLDER_PATH&#125;/$&#123;BASE_IMAGE_NAME&#125;&quot;</div><div class="line">    echo &quot;this line is target path&quot;</div><div class="line">    echo $TARGET_PATH</div><div class="line">    echo $SRCROOT</div><div class="line">    echo $(find $&#123;SRCROOT&#125; -name &quot;AppIcon60x60@2x.png&quot;)</div><div class="line">    BASE_IMAGE_PATH=$(find $&#123;SRCROOT&#125; -name $&#123;BASE_IMAGE_NAME&#125;)</div><div class="line">//进行宽高的计算</div><div class="line">    WIDTH=$(identify -format %w $&#123;BASE_IMAGE_PATH&#125;)</div><div class="line">    FONT_SIZE=$(echo &quot;$WIDTH * .15&quot; | bc -l)</div><div class="line">    echo &quot;font size $FONT_SIZE&quot;</div><div class="line">    </div><div class="line">//最后需要被绘制到icon上面的角标</div><div class="line">    iconbadgeDebug=&quot;$&#123;SRCROOT&#125;/iconbadge/debugRibbon.png&quot;</div><div class="line">    iconbadgeRelease=&quot;$&#123;SRCROOT&#125;/iconbadge/prbetaRibbon.png&quot;</div><div class="line">    resizedIconBadge=&quot;$&#123;SRCROOT&#125;/iconbadge/resizedRibbon.png&quot;</div><div class="line">    echo &quot;iconbadge is $iconbadge&quot;</div><div class="line">    </div><div class="line">//根据不同环境进行绘制</div><div class="line">    if [ &quot;$&#123;CONFIGURATION&#125;&quot; == &quot;Debug&quot; ]; then</div><div class="line">    convert $&#123;iconbadgeDebug&#125; -resize $&#123;WIDTH&#125;x$&#123;WIDTH&#125; $&#123;resizedIconBadge&#125;</div><div class="line">    convert $&#123;BASE_IMAGE_PATH&#125; -fill white -font Times-Bold -pointsize $&#123;FONT_SIZE&#125; -gravity south -annotate 0 &quot;$versionNumber.$buildNumber&quot; - | composite $&#123;resizedIconBadge&#125; - $&#123;TARGET_PATH&#125;</div><div class="line">    fi</div><div class="line">    </div><div class="line">    if [ &quot;$&#123;CONFIGURATION&#125;&quot; == &quot;Release&quot; ]; then</div><div class="line">    convert $&#123;iconbadgeRelease&#125; -resize $&#123;WIDTH&#125;x$&#123;WIDTH&#125; $&#123;resizedIconBadge&#125;</div><div class="line">    convert $&#123;BASE_IMAGE_PATH&#125; -fill white -font Times-Boldr -pointsize $&#123;FONT_SIZE&#125; -gravity south -annotate 0 &quot;$versionNumber.$buildNumber&quot; - | composite $&#123;resizedIconBadge&#125; - $&#123;TARGET_PATH&#125;</div><div class="line">    fi</div><div class="line">&#125;</div><div class="line"></div><div class="line">generateIcon &quot;AppIcon20x20@2x.png&quot;</div><div class="line">generateIcon &quot;AppIcon20x20@3x.png&quot;</div><div class="line">generateIcon &quot;AppIcon29x29@2x.png&quot;</div><div class="line">generateIcon &quot;AppIcon29x29@3x.png&quot;</div><div class="line">generateIcon &quot;AppIcon40x40@2x.png&quot;</div><div class="line">generateIcon &quot;AppIcon40x40@3x.png&quot;</div><div class="line">generateIcon &quot;AppIcon60x60@2x.png&quot;</div><div class="line">generateIcon &quot;AppIcon60x60@3x.png&quot;</div></pre></td></tr></table></figure></p>
+<p>直接去demo里面复制文件，然后更改这个地方图片的路径+Debug／Realse，最终选择使用哪个角标进行绘制</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1743443-5c44ba41b0449a2b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="752AAF19-D60E-45CE-85D5-B5CABFF22C4D.png"></p>
+<p>注意这里是会针对Target进行建立脚本<br>a.  APPStore不要这个脚本<br>b.  Debug模式下面对应Debug角标<br>c.  开发环境对应的角标是Bete角标<br>d.  Pr环境对应的是Pr角标<br>这是我们公司的规则，当然你也可以根据你们公司的业务进行整理</p>
+<p>demo里面为了在debug展示不同的效果，对图片的路径进行了更改，下面就是脚本的效果</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1743443-d6d676f41f0724eb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="90DFDFAC-9550-418A-BB19-36E1E6C55439.png"></p>
+<p>补充：因为我们公司的项目全部在fir上面进行分发，为了记录次数以及辨认版本，我们进行了每次打包的时候build+1的脚本，也附在demo里面去了，这里就不展开了。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1743443-2bad97b8ac0f430d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="87BFE8CF-5022-4F84-8FBD-1D08A7A795A1.png"></p>
+<p>如果你觉得我的文章+demo对你有帮助，欢迎给github上面留下你的star，不胜感激。<br><a href="https://github.com/knightSaber/CBTSubscriptDemo-" target="_blank" rel="external">文章demo</a></p>
+<p>如果解决文章对你有帮助，请给我的github  star 一下，不胜感激</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/分环境/" rel="tag"># 分环境</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/16/iOS 被开发者误会的队列组/" rel="prev" title="iOS 被开发者误会的队列组">
+                iOS 被开发者误会的队列组 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="陈波涛" />
+          <p class="site-author-name" itemprop="name">陈波涛</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人小站</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/your-user-name" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="hhttps://github.com/knightSaber" target="_blank" title="简书">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                    
+                      简书
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈波涛</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
