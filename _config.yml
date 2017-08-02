@@ -77,7 +77,7 @@ theme: next
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
-  type: github
-  repository: http://www.botaochen.xyz
+  type: git
+  repo: https://github.com/knightSaber/cbtsite.git
   branch: master
 
