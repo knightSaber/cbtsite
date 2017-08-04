@@ -4,11 +4,11 @@
         "details": [
             {
                 "appID": "47P6T6SYNE.com.zzyg.travelnotes",
-                "paths": [ "/support/*"]
+                "paths": [ “/botaochen/*”]
             },
             {
                 "appID": "47P6T6SYNE.com.zzyg.travelnotes",
-                "paths": [ "/open/*" ]
+                "paths": [ “/botaochen/*” ]
             }
         ]
     }
